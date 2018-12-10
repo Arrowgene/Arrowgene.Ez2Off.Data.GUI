@@ -1,66 +1,69 @@
-const process = require('process');
 const childProcess = require('child_process');
 const _ = require('electron').remote.require('lodash');
 
 function execute(arg, src, dst, mode) {
+    const textarea = $("#modal-notice #textarea");
+
     if (!_.isString(arg) || _.isEmpty(arg) ||
         !_.isString(src) || _.isEmpty(src) ||
         !_.isString(dst) || _.isEmpty(dst)) {
-        return 'The parameter is empty.';
+        textarea.append('The parameter is empty.');
+        textarea.css('color', 'red');
+        modalDone();
+        return;
     }
-    const cmd = `dotnet ./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.dll data ${arg} ${src} ${dst}` + (mode ? ` ${mode}` : '');
-    // console.log(cmd);
 
+    const exec = childProcess.spawn('dotnet', ['./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.dll', 'data', arg, src, dst, mode ? mode : ''], {
+        cwd: __dirname
+    });
+    textarea.append('Processing, please wait...\n-');
+
+    exec.stdout.on('data', chunk => {
+        textarea.append(optimizeText(chunk.toString('utf8')));
+        scrollBottom(textarea);
+    });
+
+    exec.stderr.on('data', chunk => {
+        textarea.append(optimizeText(chunk.toString('utf8')));
+        textarea.css('color', 'red');
+        scrollBottom(textarea);
+        goDotnetDL();
+    });
+
+    exec.on('error', err => {
+        textarea.append(err);
+        textarea.css('color', 'red');
+        scrollBottom(textarea);
+        goDotnetDL();
+        modalDone();
+    });
+
+    exec.on('close', () => {
+        modalDone();
+    });
+}
+
+function optimizeText(text) {
+    return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function scrollBottom(textarea) {
+    textarea.scrollTop(textarea[0].scrollHeight - textarea.height());
+}
+
+function goDotnetDL() {
     const {
-        BrowserWindow
+        dialog
     } = require('electron').remote;
-
-    let child = new BrowserWindow({
-        parent: top,
-        modal: true,
-        show: false,
-        resizable: false,
-        width: 400,
-        height: 300,
-        center: true
+    const result = dialog.showMessageBox({
+        type: 'question',
+        message: 'Do you want to download .NET Core?',
+        detail: 'You may be missing the .NET Core runtime,\ndo you want to download it?',
+        buttons: ['Yes', 'No']
     });
-    child.loadURL('./blank.html');
-    child.once('ready-to-show', () => {
-        child.show();
-        // if (process.platform == 'darwin') {
-        //     const exec = childProcess.exec(cmd, {
-        //         cwd: process.cwd() + '/Contents/Resources/app/src'
-        //     }, (error, stdout, stderr) => {
-        //         if (error)
-        //             child.webContents.executeJavaScript(`document.write(${error})`);
-        //         if (stdout) {
-        //             child.webContents.executeJavaScript(`document.write(${stdout})`);
-        //         }
-        //         if (stderr) {
-        //             child.webContents.executeJavaScript(`document.write(${stderr})`);
-        //         }
-        //     });
-        //     exec.on('close', () => {
-        //         child.close();
-        //     });
-        // } else {
-        //     const exec = childProcess.exec(cmd, {
-        //         cwd: process.cwd() + '/resources/app/src'
-        //     }, (error, stdout, stderr) => {
-        //         if (error)
-        //             child.webContents.executeJavaScript(`document.write(${error})`);
-        //         if (stdout) {
-        //             child.webContents.executeJavaScript(`document.write(${stdout})`);
-        //         }
-        //         if (stderr) {
-        //             child.webContents.executeJavaScript(`document.write(${stderr})`);
-        //         }
-        //     });
-        //     exec.on('close', () => {
-        //         child.close();
-        //     });
-        // }
-    });
+    if (result == 0) {
+        window.open('https://dotnet.microsoft.com/download');
+    }
 }
 
 module.exports = {

@@ -11,30 +11,54 @@
 	<!-- <link href="css/bootstrap-theme.min.css" rel="stylesheet"> -->
 
 	<!-- 模态框 -->
-	<div class="modal fade" id="myModal" role="dialog" aria-hidden="true" aria-labelledby="myModalLabel">
+	<div class="modal fade" id="modal-notice" role="dialog" aria-hidden="true" aria-labelledby="text-title">
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
-					<button class="close" aria-hidden="true" type="button" data-dismiss="modal">×</button>
-					<h4 class="modal-title" id="myModalLabel">
+					<button class="close" aria-hidden="true" type="button" data-dismiss="modal" id="btn-top-close">×</button>
+					<h4 class="modal-title" id="text-title">
 						Title
 					</h4>
 				</div>
-				<div class="modal-body" id="myModalBody">
+				<div class="modal-body" id="text-body">
 					Content...
 				</div>
 				<div class="modal-footer">
-					<button class="btn btn-default" type="button" data-dismiss="modal">Close</button>
+					<button class="btn btn-default" type="button" data-dismiss="modal" id="btn-close">Close</button>
 				</div>
 			</div>
 		</div>
 	</div>
 	<script>
 		// 封装模态框
-		function showModal(title, body) {
-			$('#myModalLabel').html(title);
-			$('#myModalBody').html(body);
-			$('#myModal').modal('show');
+		function showModal(title, body, waitClose) {
+			$('#modal-notice #text-title').text(title);
+			$('#modal-notice #text-body').html(body);
+			if (waitClose) {
+				$('#modal-notice #btn-top-close').hide();
+				$('#modal-notice #btn-close').hide();
+				$('#modal-notice').modal({
+					backdrop: 'static',
+					keyboard: false
+				});
+			} else {
+				$('#modal-notice #btn-top-close').show();
+				$('#modal-notice #btn-close').show();
+				$('#modal-notice').modal({
+					backdrop: true,
+					keyboard: true
+				});
+			}
+			$('#modal-notice').modal('show');
+		}
+
+		function modalDone() {
+			$('#modal-notice').modal({
+					backdrop: true,
+					keyboard: true
+			});
+			$('#modal-notice #btn-top-close').show();
+			$('#modal-notice #btn-close').show();
 		}
 	</script>
 </head>
@@ -227,10 +251,9 @@
 				}
 			}
 
-			const result = data_process.execute(arg, src, dst, mode);
-			if (result != 0) {
-				showModal('Error', result);
-			} else showModal('', 'Done.');
+			showModal('Console',
+				'<textarea class="form-control" rows="9" readonly style="resize:none" id="textarea"></textarea>', true);
+			data_process.execute(arg, src, dst, mode);
 		});
 	</script>
 

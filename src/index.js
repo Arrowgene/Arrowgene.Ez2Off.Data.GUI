@@ -1,6 +1,7 @@
 import {
   app,
-  BrowserWindow
+  BrowserWindow,
+  Menu
 } from 'electron';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -22,6 +23,8 @@ const createWindow = () => {
     show: false
   });
 
+  Menu.setApplicationMenu(null);
+
   // and load the index.html of the app.
   mainWindow.loadURL(`file://${__dirname}/index.html`);
 
@@ -38,8 +41,6 @@ const createWindow = () => {
     mainWindow = null;
   });
 
-  // 不显示菜单
-  mainWindow.setMenu(null);
   // 窗口未准备好前不显示
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
