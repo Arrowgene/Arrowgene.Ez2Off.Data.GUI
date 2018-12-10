@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Ez2off Data GUI Tool</title>
+
+	<!-- Bootstrap  -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<!-- <link href="css/bootstrap-theme.min.css" rel="stylesheet"> -->
+
+	<!-- 模态框 -->
+	<div class="modal fade" id="myModal" role="dialog" aria-hidden="true" aria-labelledby="myModalLabel">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button class="close" aria-hidden="true" type="button" data-dismiss="modal">×</button>
+					<h4 class="modal-title" id="myModalLabel">
+						Title
+					</h4>
+				</div>
+				<div class="modal-body" id="myModalBody">
+					Content...
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-default" type="button" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+		// 封装模态框
+		function showModal(title, body) {
+			$('#myModalLabel').html(title);
+			$('#myModalBody').html(body);
+			$('#myModal').modal('show');
+		}
+	</script>
+</head>
+
+<body>
+	<div class="container" style="padding-top:10px">
+		<div class="row clearfix">
+			<div class="col-md-12 column">
+				<div class="panel-group" id="panel-main">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<a class="panel-title" href="#panel-element-select-files" data-toggle="collapse" data-parent="#panel-main">Select
+								Files</a>
+						</div>
+						<div class="panel-collapse collapse in" id="panel-element-select-files">
+							<div class="panel-body">
+								TODO
+							</div>
+						</div>
+					</div>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<a class="panel-title" href="#panel-element-select-directory" data-toggle="collapse" data-parent="#panel-main">Select
+								Directory</a>
+						</div>
+						<div class="panel-collapse collapse" id="panel-element-select-directory">
+							<div class="panel-body">
+								<div class="form-group">
+									<label>Source directory:</label>
+									<div class="input-group">
+										<input type="text" class="form-control" id="input-source-directory">
+										<span class="input-group-btn">
+											<button class="btn btn-default" type="button" id="btn-source-directory">Browse</button>
+										</span>
+									</div>
+								</div>
+								<div class="form-group" id="group-destination-file">
+									<label>Destination file:</label>
+									<div class="input-group">
+										<input type="text" class="form-control" id="input-destination-file">
+										<span class="input-group-btn">
+											<button class="btn btn-default" type="button" id="btn-destination-file">Browse</button>
+										</span>
+									</div>
+								</div>
+								<div class="form-group" id="group-destination-directory">
+									<label>Destination directory:</label>
+									<div class="input-group">
+										<input type="text" class="form-control" id="input-destination-directory">
+										<span class="input-group-btn">
+											<button class="btn btn-default" type="button" id="btn-destination-directory">Browse</button>
+										</span>
+									</div>
+								</div>
+								<div class="checkbox">
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-output-file" checked>Output as a file</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-encryption">Encryption?</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-decryption">Decryption?</label>
+								</div>
+								<div style="text-align:center">
+									<button class="btn btn-default btn-primary btn-block" type="button" data-loading-text="please wait..." id="btn-select-directory-execute">execute</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		window.$ = window.jQuery = require('./js/jquery.min');
+		window._ = require('electron').remote.require('lodash');
+	</script>
+	<script src="js/bootstrap.min.js"></script>
+
+	<script>
+		const win = require('electron').remote.getCurrentWindow();
+		const data_process = require('./data_process');
+
+		$('#btn-source-files').on('click', function () {
+			const {
+				dialog
+			} = require('electron').remote;
+			dialog.showOpenDialog({
+				properties: ['openFile', 'multiSelections'],
+				filters: [{
+						name: 'Ez2on Data',
+						extensions: ['tro', 'bin']
+					},
+					{
+						name: 'Ez2on Image',
+						extensions: ['png', 'bmp', 'jpg']
+					},
+					{
+						name: 'Ez2on sound',
+						extensions: ['ogg']
+					},
+					{
+						name: 'All Files',
+						extensions: ['*']
+					}
+				]
+			});
+		});
+
+		$('#panel-element-select-directory #btn-source-directory').on('click', function () {
+			const {
+				dialog
+			} = require('electron').remote;
+
+			const directoryPath = dialog.showOpenDialog({
+				properties: ['openDirectory'],
+			});
+
+			if (directoryPath && directoryPath.length > 0) {
+				$('#panel-element-select-directory #input-source-directory').val(directoryPath[0]);
+			}
+		});
+
+		$('#panel-element-select-directory #btn-destination-file').on('click', function () {
+			const {
+				dialog
+			} = require('electron').remote;
+
+			const filePath = dialog.showSaveDialog({
+				filters: [{
+					name: 'Ez2on Data',
+					extensions: ['tro', 'bin']
+				}]
+			});
+
+			if (filePath) {
+				$('#panel-element-select-directory #input-destination-file').val(filePath);
+			}
+		});
+
+		$('#panel-element-select-directory #btn-destination-directory').on('click', function () {
+			const {
+				dialog
+			} = require('electron').remote;
+
+			const directoryPath = dialog.showOpenDialog({
+				properties: ['openDirectory'],
+			});
+
+			if (directoryPath && directoryPath.length > 0) {
+				$('#panel-element-select-directory #input-destination-directory').val(directoryPath[0]);
+			}
+		});
+
+		function checkCheckboxOutputFile() {
+			if ($('#panel-element-select-directory #checkbox-output-file').prop('checked')) {
+				$('#panel-element-select-directory #group-destination-file').show();
+				$('#panel-element-select-directory #group-destination-directory').hide();
+				$('#panel-element-select-directory #checkbox-encryption').parent().show();
+				$('#panel-element-select-directory #checkbox-decryption').parent().hide();
+				$('#panel-element-select-directory #btn-select-directory-execute').text('Pack');
+			} else {
+				$('#panel-element-select-directory #group-destination-file').hide();
+				$('#panel-element-select-directory #group-destination-directory').show();
+				$('#panel-element-select-directory #checkbox-encryption').parent().hide();
+				$('#panel-element-select-directory #checkbox-decryption').parent().show();
+				$('#panel-element-select-directory #btn-select-directory-execute').text('Extract');
+			}
+		}
+		checkCheckboxOutputFile();
+
+		$('#panel-element-select-directory #checkbox-output-file').on('click', function () {
+			checkCheckboxOutputFile();
+		});
+
+		$('#panel-element-select-directory #btn-select-directory-execute').on('click', function () {
+			let arg;
+			const src = $('#panel-element-select-directory #input-source-directory').val();
+			let dst;
+			let mode;
+
+			if ($('#panel-element-select-directory #checkbox-output-file').prop('checked')) {
+				dst = $('#panel-element-select-directory #input-destination-file').val();
+				if (_.isString(dst) && !_.isEmpty(dst)) arg = 'pack';
+				if ($('#panel-element-select-directory #checkbox-encryption').prop('checked')) {
+					mode = '-e';
+				}
+			} else {
+				dst = $('#panel-element-select-directory #input-destination-directory').val();
+				if (_.isString(dst) && !_.isEmpty(dst)) arg = 'extract-folder';
+				if ($('#panel-element-select-directory #checkbox-decryption').prop('checked')) {
+					mode = '-d';
+				}
+			}
+
+			const result = data_process.execute(arg, src, dst, mode);
+			if (result != 0) {
+				showModal('Error', result);
+			} else showModal('', 'Done.');
+		});
+	</script>
+
+</body>
+
+</html>
