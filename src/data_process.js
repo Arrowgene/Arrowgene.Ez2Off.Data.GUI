@@ -19,12 +19,12 @@ function execute(arg, src, dst, mode) {
     textarea.append('Processing, please wait...\n-');
 
     exec.stdout.on('data', chunk => {
-        textarea.append(optimizeText(chunk.toString('utf8')));
+        textarea.append(optimizeString(chunk.toString('utf8')));
         scrollBottom(textarea);
     });
 
     exec.stderr.on('data', chunk => {
-        textarea.append(optimizeText(chunk.toString('utf8')));
+        textarea.append(optimizeString(chunk.toString('utf8')));
         textarea.css('color', 'red');
         scrollBottom(textarea);
         goDotnetDL();
@@ -43,7 +43,7 @@ function execute(arg, src, dst, mode) {
     });
 }
 
-function optimizeText(text) {
+function optimizeString(text) {
     return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 

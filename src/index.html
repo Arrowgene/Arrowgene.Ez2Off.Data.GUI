@@ -24,6 +24,7 @@
 					Content...
 				</div>
 				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" id="btn-confirm">Confirm</button>
 					<button class="btn btn-default" type="button" data-dismiss="modal" id="btn-close">Close</button>
 				</div>
 			</div>
@@ -49,6 +50,7 @@
 					keyboard: true
 				});
 			}
+			$('#modal-notice #btn-confirm').hide();
 			$('#modal-notice').modal('show');
 		}
 
@@ -70,18 +72,50 @@
 				<div class="panel-group" id="panel-main">
 					<div class="panel panel-default">
 						<div class="panel-heading">
-							<a class="panel-title" href="#panel-element-select-files" data-toggle="collapse" data-parent="#panel-main">Select
-								Files</a>
+							<a class="panel-title" href="#panel-element-select-files" data-toggle="collapse" data-parent="#panel-main" style="text-decoration:none">Select
+								Files (TODO)</a>
 						</div>
 						<div class="panel-collapse collapse in" id="panel-element-select-files">
 							<div class="panel-body">
-								TODO
+								<label>Source list:</label>
+								<div class="list-group" id="input-source-list">
+									<a class="list-group-item">
+										...
+										<div style="float:right">
+											<button class="btn btn-xs" type="button" id="btn-all-clear">All Clear</button>
+											<button class="btn btn-xs btn-primary" type="button" id="btn-add-files">Add</button>
+										</div>
+									</a>
+								</div>
+								<div class="form-group" id="group-destination-directory">
+									<label>Destination directory:</label>
+									<div class="input-group">
+										<input type="text" class="form-control" id="input-destination-directory">
+										<span class="input-group-btn">
+											<button class="btn btn-default" type="button" id="btn-destination-directory">Browse</button>
+										</span>
+									</div>
+								</div>
+								<div class="checkbox">
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-output-file" checked>Output as a file</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-encryption">Encryption?</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-decryption">Decryption?</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-decryption">Offset?</label>
+								</div>
+								<div class="input-group input-group-sm" style="padding-bottom:10px">
+									<span class="input-group-addon">Offset:</span>
+									<input type="text" class="form-control" style="width:50px">
+								</div>
+								<div>
+									<button class="btn btn-default btn-primary btn-block" type="button" data-loading-text="please wait..." id="btn-select-files-execute">execute</button>
+								</div>
 							</div>
 						</div>
 					</div>
 					<div class="panel panel-default">
 						<div class="panel-heading">
-							<a class="panel-title" href="#panel-element-select-directory" data-toggle="collapse" data-parent="#panel-main">Select
+							<a class="panel-title" href="#panel-element-select-directory" data-toggle="collapse" data-parent="#panel-main"
+							 style="text-decoration:none">Select
 								Directory</a>
 						</div>
 						<div class="panel-collapse collapse" id="panel-element-select-directory">
@@ -118,7 +152,7 @@
 									<label style="margin-right:10px"><input type="checkbox" id="checkbox-encryption">Encryption?</label>
 									<label style="margin-right:10px"><input type="checkbox" id="checkbox-decryption">Decryption?</label>
 								</div>
-								<div style="text-align:center">
+								<div>
 									<button class="btn btn-default btn-primary btn-block" type="button" data-loading-text="please wait..." id="btn-select-directory-execute">execute</button>
 								</div>
 							</div>
@@ -139,11 +173,11 @@
 		const win = require('electron').remote.getCurrentWindow();
 		const data_process = require('./data_process');
 
-		$('#btn-source-files').on('click', function () {
+		$('#panel-element-select-files #input-source-list #btn-add-files').on('click', function () {
 			const {
 				dialog
 			} = require('electron').remote;
-			dialog.showOpenDialog({
+			const filesPaths = dialog.showOpenDialog({
 				properties: ['openFile', 'multiSelections'],
 				filters: [{
 						name: 'Ez2on Data',
@@ -154,7 +188,7 @@
 						extensions: ['png', 'bmp', 'jpg']
 					},
 					{
-						name: 'Ez2on sound',
+						name: 'Ez2on Sound',
 						extensions: ['ogg']
 					},
 					{
@@ -162,6 +196,36 @@
 						extensions: ['*']
 					}
 				]
+			});
+			if (!_.isEmpty(filesPaths)) {
+				const filesList = $('#panel-element-select-files #input-source-list');
+				for (let i = 0; i < filesPaths.length; i++) {
+					const path = filesPaths[i];
+					filesList.prepend('<a class="list-group-item">' +
+						path +
+						'<button class="btn btn-xs" type="button" id="btn-remove" style="float:right">Remove</button>' +
+						'</a>');
+
+					$('#panel-element-select-files #input-source-list #btn-remove').on('click', function () {
+						$(this).off('click');
+						$(this).parent().remove();
+					});
+				}
+			}
+		});
+
+		$('#panel-element-select-files #input-source-list #btn-all-clear').on('click', function () {
+			showModal('Warning', 'Are you sure to clear the list?');
+			$('#modal-notice #btn-confirm').show();
+			$('#modal-notice #btn-confirm').on('click', function () {
+				$(this).off('click');
+				$('#modal-notice').modal('hide');
+				const filesList = $('#panel-element-select-files #input-source-list').children();
+				const itemCount = filesList.length - 1;
+				for (let i = 0; i < itemCount; i++) {
+					const item = filesList[i];
+					item.remove();
+				}
 			});
 		});
 
@@ -174,7 +238,7 @@
 				properties: ['openDirectory'],
 			});
 
-			if (directoryPath && directoryPath.length > 0) {
+			if (!_.isEmpty(directoryPath)) {
 				$('#panel-element-select-directory #input-source-directory').val(directoryPath[0]);
 			}
 		});
@@ -191,7 +255,7 @@
 				}]
 			});
 
-			if (filePath) {
+			if (!_.isEmpty(filePath)) {
 				$('#panel-element-select-directory #input-destination-file').val(filePath);
 			}
 		});
@@ -205,7 +269,7 @@
 				properties: ['openDirectory'],
 			});
 
-			if (directoryPath && directoryPath.length > 0) {
+			if (!_.isEmpty(directoryPath)) {
 				$('#panel-element-select-directory #input-destination-directory').val(directoryPath[0]);
 			}
 		});
@@ -252,7 +316,7 @@
 			}
 
 			showModal('Console',
-				'<textarea class="form-control" rows="9" readonly style="resize:none" id="textarea"></textarea>', true);
+				'<textarea class="form-control" rows="12" readonly style="resize:none" id="textarea"></textarea>', true);
 			data_process.execute(arg, src, dst, mode);
 		});
 	</script>
