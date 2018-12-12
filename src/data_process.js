@@ -13,9 +13,10 @@ function execute(arg, src, dst, mode) {
         return;
     }
 
-    const exec = childProcess.spawn('dotnet', ['./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.dll', 'data', arg, src, dst, mode ? mode : ''], {
+    const exec = childProcess.spawn('./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.exe', ['data', arg, src, dst, mode ? mode : ''], {
         cwd: __dirname
     });
+
     textarea.append('Processing, please wait...\n-');
 
     exec.stdout.on('data', chunk => {
@@ -27,14 +28,14 @@ function execute(arg, src, dst, mode) {
         textarea.append(optimizeString(chunk.toString('utf8')));
         textarea.css('color', 'red');
         scrollBottom(textarea);
-        goDotnetDL();
+        // goDotnetDL();
     });
 
     exec.on('error', err => {
         textarea.append(err);
         textarea.css('color', 'red');
         scrollBottom(textarea);
-        goDotnetDL();
+        // goDotnetDL();
         modalDone();
     });
 
@@ -56,7 +57,7 @@ function goDotnetDL() {
         dialog
     } = require('electron').remote;
     const result = dialog.showMessageBox({
-        type: 'question',
+        type: 'warning',
         message: 'Do you want to download .NET Core?',
         detail: 'You may be missing the .NET Core runtime,\ndo you want to download it?',
         buttons: ['Yes', 'No']
