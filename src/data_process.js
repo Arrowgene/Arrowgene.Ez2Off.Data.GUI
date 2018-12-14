@@ -1,46 +1,46 @@
 const childProcess = require('child_process');
 const _ = require('electron').remote.require('lodash');
 
-function execute(arg, src, dst, mode) {
-    const textarea = $("#modal-notice #textarea");
+async function execute(arg, src, dst, mode) {
+    return new Promise(resolve => {
+        const textarea = $("#modal-notice #textarea");
 
-    if (!_.isString(arg) || _.isEmpty(arg) ||
-        !_.isString(src) || _.isEmpty(src) ||
-        !_.isString(dst) || _.isEmpty(dst)) {
-        textarea.append('The parameter is empty.');
-        textarea.css('color', 'red');
-        modalDone();
-        return;
-    }
+        if (!_.isString(arg) || _.isEmpty(arg) ||
+            !_.isString(src) || _.isEmpty(src) ||
+            !_.isString(dst) || _.isEmpty(dst)) {
+            textarea.append('The parameter is empty.');
+            textarea.css('color', 'red');
+            resolve();
+        }
 
-    const exec = childProcess.spawn('./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.exe', ['data', arg, src, dst, mode ? mode : ''], {
-        cwd: __dirname
-    });
+        const exec = childProcess.spawn('./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.exe', ['data', arg, src, dst, mode ? mode : ''], {
+            cwd: __dirname
+        });
 
-    textarea.append('Processing, please wait...\n-');
+        textarea.append('Processing, please wait...\n-');
 
-    exec.stdout.on('data', chunk => {
-        textarea.append(optimizeString(chunk.toString('utf8')));
-        scrollBottom(textarea);
-    });
+        exec.stdout.on('data', chunk => {
+            textarea.append(optimizeString(chunk.toString('utf8')));
+            scrollBottom(textarea);
+        });
 
-    exec.stderr.on('data', chunk => {
-        textarea.append(optimizeString(chunk.toString('utf8')));
-        textarea.css('color', 'red');
-        scrollBottom(textarea);
-        // goDotnetDL();
-    });
+        exec.stderr.on('data', chunk => {
+            textarea.append(optimizeString(chunk.toString('utf8')));
+            textarea.css('color', 'red');
+            scrollBottom(textarea);
+            // goDotnetDL();
+        });
 
-    exec.on('error', err => {
-        textarea.append(err);
-        textarea.css('color', 'red');
-        scrollBottom(textarea);
-        // goDotnetDL();
-        modalDone();
-    });
+        exec.on('error', err => {
+            textarea.append(err);
+            textarea.css('color', 'red');
+            scrollBottom(textarea);
+            // goDotnetDL();
+        });
 
-    exec.on('close', () => {
-        modalDone();
+        exec.on('close', () => {
+            resolve();
+        });
     });
 }
 

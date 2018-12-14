@@ -73,7 +73,7 @@
 					<div class="panel panel-default">
 						<div class="panel-heading">
 							<a class="panel-title" href="#panel-element-select-files" data-toggle="collapse" data-parent="#panel-main" style="text-decoration:none">Select
-								Files (TODO)</a>
+								Files</a>
 						</div>
 						<div class="panel-collapse collapse in" id="panel-element-select-files">
 							<div class="panel-body">
@@ -87,15 +87,6 @@
 										</div>
 									</a>
 								</div>
-								<div class="form-group" id="group-destination-file">
-									<label>Destination file:</label>
-									<div class="input-group">
-										<input type="text" class="form-control" id="input-destination-file">
-										<span class="input-group-btn">
-											<button class="btn btn-default" type="button" id="btn-destination-file">Browse</button>
-										</span>
-									</div>
-								</div>
 								<div class="form-group" id="group-destination-directory">
 									<label>Destination directory:</label>
 									<div class="input-group">
@@ -106,7 +97,7 @@
 									</div>
 								</div>
 								<div class="checkbox">
-									<label style="margin-right:10px"><input type="checkbox" id="checkbox-output-file">Output as a file</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-extract">Extract</label>
 									<label style="margin-right:10px"><input type="checkbox" id="checkbox-is-archive">Is Archive?</label>
 									<label style="margin-right:10px"><input type="checkbox" id="checkbox-encryption">Encryption?</label>
 									<label style="margin-right:10px"><input type="checkbox" id="checkbox-decryption">Decryption?</label>
@@ -114,7 +105,7 @@
 								</div>
 								<div class="input-group input-group-sm" id="input-offset" style="padding-bottom:10px">
 									<span class="input-group-addon">Offset:</span>
-									<input type="text" class="form-control" style="width:50px">
+									<input type="number" class="form-control" value="0" style="width:30%">
 								</div>
 								<div>
 									<button class="btn btn-default btn-primary btn-block" type="button" data-loading-text="please wait..." id="btn-select-files-execute">execute</button>
@@ -270,15 +261,6 @@
 			});
 		});
 
-		$('#panel-element-select-files #btn-destination-file').on('click', function () {
-			const {
-				dialog
-			} = require('electron').remote;
-			const filesPath = dialog.showSaveDialog({
-				filters: extensionFilters
-			});
-		});
-
 		$('#panel-element-select-files #btn-destination-directory').on('click', function () {
 			const {
 				dialog
@@ -286,6 +268,10 @@
 			const directoryPath = dialog.showOpenDialog({
 				properties: ['openDirectory'],
 			});
+
+			if (!_.isEmpty(directoryPath)) {
+				$('#panel-element-select-files #input-destination-directory').val(directoryPath[0]);
+			}
 		});
 
 		$('#panel-element-select-directory #btn-source-directory').on('click', function () {
@@ -336,31 +322,25 @@
 		});
 
 		function checkCheckbox() {
-			if ($('#panel-element-select-files #checkbox-output-file').prop('checked')) {
-				$('#panel-element-select-files #group-destination-file').show();
-				$('#panel-element-select-files #group-destination-directory').hide();
-				$('#panel-element-select-files #checkbox-is-archive').parent().show();
-				$('#panel-element-select-files #checkbox-decryption').parent().show();
-				$('#panel-element-select-files #checkbox-encryption').parent().show();
-				$('#panel-element-select-files #checkbox-offset').parent().show();
-				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', true);
-				$('#panel-element-select-files #btn-select-files-execute').text('Please select mode');
-			} else {
-				$('#panel-element-select-files #group-destination-file').hide();
-				$('#panel-element-select-files #group-destination-directory').show();
+			if ($('#panel-element-select-files #checkbox-extract').prop('checked')) {
 				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
 				$('#panel-element-select-files #checkbox-decryption').parent().show();
 				$('#panel-element-select-files #checkbox-encryption').parent().hide();
 				$('#panel-element-select-files #checkbox-offset').parent().hide();
 				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
 				$('#panel-element-select-files #btn-select-files-execute').text('Extract');
+			} else {
+				$('#panel-element-select-files #checkbox-is-archive').parent().show();
+				$('#panel-element-select-files #checkbox-decryption').parent().show();
+				$('#panel-element-select-files #checkbox-encryption').parent().show();
+				$('#panel-element-select-files #checkbox-offset').parent().show();
+				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', true);
+				$('#panel-element-select-files #btn-select-files-execute').text('Please select mode');
 			}
 
 			if ($('#panel-element-select-files #checkbox-offset').prop('checked')) {
 				$('#panel-element-select-files #input-offset').show();
 				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
-				$('#panel-element-select-files #group-destination-file').show();
-				$('#panel-element-select-files #group-destination-directory').hide();
 				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
 				$('#panel-element-select-files #btn-select-files-execute').text('Offset');
 			} else {
@@ -369,6 +349,7 @@
 
 			if ($('#panel-element-select-files #checkbox-is-archive').prop('checked') ||
 				$('#panel-element-select-files #checkbox-offset').prop('checked')) {
+				$('#panel-element-select-files #checkbox-extract').parent().hide();
 				$('#panel-element-select-files #checkbox-decryption').parent().hide();
 				$('#panel-element-select-files #checkbox-encryption').parent().hide();
 				if ($('#panel-element-select-files #checkbox-is-archive').prop('checked')) {
@@ -376,9 +357,12 @@
 					$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
 					$('#panel-element-select-files #btn-select-files-execute').text('Decrypt archive');
 				}
+			} else {
+				$('#panel-element-select-files #checkbox-extract').parent().show();
 			}
 
 			if ($('#panel-element-select-files #checkbox-encryption').prop('checked')) {
+				$('#panel-element-select-files #checkbox-extract').parent().hide();
 				$('#panel-element-select-files #checkbox-decryption').parent().hide();
 				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
 				$('#panel-element-select-files #checkbox-offset').parent().hide();
@@ -387,12 +371,14 @@
 			}
 
 			if ($('#panel-element-select-files #checkbox-decryption').prop('checked')) {
+				$('#panel-element-select-files #checkbox-extract').parent().show();
 				$('#panel-element-select-files #checkbox-encryption').parent().hide();
 				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
 				$('#panel-element-select-files #checkbox-offset').parent().hide();
-				if ($('#panel-element-select-files #checkbox-output-file').prop('checked')) {
-					$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
-					$('#panel-element-select-files #btn-select-files-execute').text('Decrypt');
+				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
+				$('#panel-element-select-files #btn-select-files-execute').text('Decrypt');
+				if ($('#panel-element-select-files #checkbox-extract').prop('checked')) {
+					$('#panel-element-select-files #btn-select-files-execute').text('Extract');
 				}
 			}
 
@@ -412,11 +398,7 @@
 		}
 		checkCheckbox();
 
-		$('#panel-element-select-files #checkbox-output-file').on('click', function () {
-			$('#panel-element-select-files #checkbox-encryption').prop('checked', false);
-			$('#panel-element-select-files #checkbox-decryption').prop('checked', false);
-			$('#panel-element-select-files #checkbox-is-archive').prop('checked', false);
-			$('#panel-element-select-files #checkbox-offset').prop('checked', false);
+		$('#panel-element-select-files #checkbox-extract').on('click', function () {
 			checkCheckbox();
 		});
 		$('#panel-element-select-files #checkbox-is-archive').on('click', function () {
@@ -435,7 +417,7 @@
 			checkCheckbox();
 		});
 
-		$('#panel-element-select-directory #btn-select-directory-execute').on('click', function () {
+		$('#panel-element-select-directory #btn-select-directory-execute').on('click', async function () {
 			let arg;
 			const src = $('#panel-element-select-directory #input-source-directory').val();
 			let dst;
@@ -457,11 +439,50 @@
 
 			showModal('Console',
 				'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
-			data_process.execute(arg, src, dst, mode);
+			await data_process.execute(arg, src, dst, mode);
+			modalDone();
 		});
 
-		$('#panel-element-select-files #btn-select-files-execute').on('click', function () {
+		$('#panel-element-select-files #btn-select-files-execute').on('click', async function () {
+			let arg;
+			const src = $('#panel-element-select-files #input-source-list #input-file-path');
+			let dst = $('#panel-element-select-files #input-destination-directory').val();
+			let mode;
 
+			if ($('#panel-element-select-files #checkbox-extract').prop('checked')) {
+				arg = 'extract';
+			}
+			if ($('#panel-element-select-files #checkbox-offset').prop('checked')) {
+				arg = 'offset'
+				mode = parseInt($('#panel-element-select-files #input-offset input').val());
+			}
+			if ($('#panel-element-select-files #checkbox-is-archive').prop('checked')) {
+				arg = 'decrypt-archive';
+			}
+			if ($('#panel-element-select-files #checkbox-encryption').prop('checked')) {
+				arg = 'encrypt';
+			}
+			if ($('#panel-element-select-files #checkbox-decryption').prop('checked')) {
+				arg = 'decrypt';
+				if ($('#panel-element-select-files #checkbox-extract').prop('checked')) {
+					arg = 'extract';
+					mode = '-d';
+				}
+			}
+
+			showModal('Console',
+				'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
+
+			if (src.length > 0) {
+				for (let i = 0; i < src.length; i++) {
+					const path = $(src[i]).text();
+					const pathArray = path.split(/[\/\\]/);
+					const fileName = pathArray[pathArray.length - 1];
+					await data_process.execute(arg, path, (dst ? dst : '.') + '/' + fileName, mode);
+				}
+			}
+
+			modalDone();
 		});
 	</script>
 
