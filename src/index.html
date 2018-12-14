@@ -80,12 +80,21 @@
 								<label>Source list:</label>
 								<div class="list-group" id="input-source-list">
 									<a class="list-group-item">
-										...
+										<label id="text-list-count" style="font-weight:normal">0</label>
 										<div style="float:right">
 											<button class="btn btn-xs" type="button" id="btn-all-clear">All Clear</button>
 											<button class="btn btn-xs btn-primary" type="button" id="btn-add-files">Add</button>
 										</div>
 									</a>
+								</div>
+								<div class="form-group" id="group-destination-file">
+									<label>Destination file:</label>
+									<div class="input-group">
+										<input type="text" class="form-control" id="input-destination-file">
+										<span class="input-group-btn">
+											<button class="btn btn-default" type="button" id="btn-destination-file">Browse</button>
+										</span>
+									</div>
 								</div>
 								<div class="form-group" id="group-destination-directory">
 									<label>Destination directory:</label>
@@ -97,12 +106,13 @@
 									</div>
 								</div>
 								<div class="checkbox">
-									<label style="margin-right:10px"><input type="checkbox" id="checkbox-output-file" checked>Output as a file</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-output-file">Output as a file</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-is-archive">Is Archive?</label>
 									<label style="margin-right:10px"><input type="checkbox" id="checkbox-encryption">Encryption?</label>
 									<label style="margin-right:10px"><input type="checkbox" id="checkbox-decryption">Decryption?</label>
-									<label style="margin-right:10px"><input type="checkbox" id="checkbox-decryption">Offset?</label>
+									<label style="margin-right:10px"><input type="checkbox" id="checkbox-offset">Offset?</label>
 								</div>
-								<div class="input-group input-group-sm" style="padding-bottom:10px">
+								<div class="input-group input-group-sm" id="input-offset" style="padding-bottom:10px">
 									<span class="input-group-addon">Offset:</span>
 									<input type="text" class="form-control" style="width:50px">
 								</div>
@@ -173,44 +183,74 @@
 		const win = require('electron').remote.getCurrentWindow();
 		const data_process = require('./data_process');
 
+		const extensionFilters = [{
+				name: 'Ez2on Archive',
+				extensions: ['tro', 'dat']
+			},
+			{
+				name: 'Ez2on Image',
+				extensions: ['png', 'bmp', 'jpg']
+			},
+			{
+				name: 'Ez2on Sound',
+				extensions: ['ogg']
+			},
+			{
+				name: 'Ez2on Animation',
+				extensions: ['scr']
+			},
+			{
+				name: 'Ez2on String',
+				extensions: ['str']
+			},
+			{
+				name: 'Ez2on Pattern',
+				extensions: ['ptn']
+			},
+			{
+				name: 'Ez2on Data',
+				extensions: ['bin', 'pvi']
+			},
+			{
+				name: 'All Files',
+				extensions: ['*']
+			}
+		];
+
+		function updateListCount() {
+			$('#panel-element-select-files #input-source-list #text-list-count').text($(
+				'#panel-element-select-files #input-source-list').children().length - 1);
+		}
+
 		$('#panel-element-select-files #input-source-list #btn-add-files').on('click', function () {
 			const {
 				dialog
 			} = require('electron').remote;
 			const filesPaths = dialog.showOpenDialog({
 				properties: ['openFile', 'multiSelections'],
-				filters: [{
-						name: 'Ez2on Data',
-						extensions: ['tro', 'bin']
-					},
-					{
-						name: 'Ez2on Image',
-						extensions: ['png', 'bmp', 'jpg']
-					},
-					{
-						name: 'Ez2on Sound',
-						extensions: ['ogg']
-					},
-					{
-						name: 'All Files',
-						extensions: ['*']
-					}
-				]
+				filters: extensionFilters
 			});
 			if (!_.isEmpty(filesPaths)) {
 				const filesList = $('#panel-element-select-files #input-source-list');
 				for (let i = 0; i < filesPaths.length; i++) {
 					const path = filesPaths[i];
 					filesList.prepend('<a class="list-group-item">' +
+						'<label id="input-file-path" style="overflow:hidden;text-overflow:ellipsis;direction:rtl;font-weight:normal;max-width:70%">' +
 						path +
+						'</label>' +
 						'<button class="btn btn-xs" type="button" id="btn-remove" style="float:right">Remove</button>' +
 						'</a>');
 
 					$('#panel-element-select-files #input-source-list #btn-remove').on('click', function () {
 						$(this).off('click');
 						$(this).parent().remove();
+						updateListCount();
 					});
 				}
+				updateListCount();
+				$("html, body").animate({
+					scrollTop: $(document).height()
+				}, 1000);
 			}
 		});
 
@@ -226,6 +266,25 @@
 					const item = filesList[i];
 					item.remove();
 				}
+				updateListCount();
+			});
+		});
+
+		$('#panel-element-select-files #btn-destination-file').on('click', function () {
+			const {
+				dialog
+			} = require('electron').remote;
+			const filesPath = dialog.showSaveDialog({
+				filters: extensionFilters
+			});
+		});
+
+		$('#panel-element-select-files #btn-destination-directory').on('click', function () {
+			const {
+				dialog
+			} = require('electron').remote;
+			const directoryPath = dialog.showOpenDialog({
+				properties: ['openDirectory'],
 			});
 		});
 
@@ -233,7 +292,6 @@
 			const {
 				dialog
 			} = require('electron').remote;
-
 			const directoryPath = dialog.showOpenDialog({
 				properties: ['openDirectory'],
 			});
@@ -247,12 +305,16 @@
 			const {
 				dialog
 			} = require('electron').remote;
-
 			const filePath = dialog.showSaveDialog({
 				filters: [{
-					name: 'Ez2on Data',
-					extensions: ['tro', 'bin']
-				}]
+						name: 'Ez2on Data',
+						extensions: ['tro', 'bin']
+					},
+					{
+						name: 'All Files',
+						extensions: ['*']
+					}
+				]
 			});
 
 			if (!_.isEmpty(filePath)) {
@@ -264,7 +326,6 @@
 			const {
 				dialog
 			} = require('electron').remote;
-
 			const directoryPath = dialog.showOpenDialog({
 				properties: ['openDirectory'],
 			});
@@ -274,7 +335,67 @@
 			}
 		});
 
-		function checkCheckboxOutputFile() {
+		function checkCheckbox() {
+			if ($('#panel-element-select-files #checkbox-output-file').prop('checked')) {
+				$('#panel-element-select-files #group-destination-file').show();
+				$('#panel-element-select-files #group-destination-directory').hide();
+				$('#panel-element-select-files #checkbox-is-archive').parent().show();
+				$('#panel-element-select-files #checkbox-decryption').parent().show();
+				$('#panel-element-select-files #checkbox-encryption').parent().show();
+				$('#panel-element-select-files #checkbox-offset').parent().show();
+				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', true);
+				$('#panel-element-select-files #btn-select-files-execute').text('Please select mode');
+			} else {
+				$('#panel-element-select-files #group-destination-file').hide();
+				$('#panel-element-select-files #group-destination-directory').show();
+				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
+				$('#panel-element-select-files #checkbox-decryption').parent().show();
+				$('#panel-element-select-files #checkbox-encryption').parent().hide();
+				$('#panel-element-select-files #checkbox-offset').parent().hide();
+				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
+				$('#panel-element-select-files #btn-select-files-execute').text('Extract');
+			}
+
+			if ($('#panel-element-select-files #checkbox-offset').prop('checked')) {
+				$('#panel-element-select-files #input-offset').show();
+				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
+				$('#panel-element-select-files #group-destination-file').show();
+				$('#panel-element-select-files #group-destination-directory').hide();
+				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
+				$('#panel-element-select-files #btn-select-files-execute').text('Offset');
+			} else {
+				$('#panel-element-select-files #input-offset').hide();
+			}
+
+			if ($('#panel-element-select-files #checkbox-is-archive').prop('checked') ||
+				$('#panel-element-select-files #checkbox-offset').prop('checked')) {
+				$('#panel-element-select-files #checkbox-decryption').parent().hide();
+				$('#panel-element-select-files #checkbox-encryption').parent().hide();
+				if ($('#panel-element-select-files #checkbox-is-archive').prop('checked')) {
+					$('#panel-element-select-files #checkbox-offset').parent().hide();
+					$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
+					$('#panel-element-select-files #btn-select-files-execute').text('Decrypt archive');
+				}
+			}
+
+			if ($('#panel-element-select-files #checkbox-encryption').prop('checked')) {
+				$('#panel-element-select-files #checkbox-decryption').parent().hide();
+				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
+				$('#panel-element-select-files #checkbox-offset').parent().hide();
+				$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
+				$('#panel-element-select-files #btn-select-files-execute').text('Encrypt');
+			}
+
+			if ($('#panel-element-select-files #checkbox-decryption').prop('checked')) {
+				$('#panel-element-select-files #checkbox-encryption').parent().hide();
+				$('#panel-element-select-files #checkbox-is-archive').parent().hide();
+				$('#panel-element-select-files #checkbox-offset').parent().hide();
+				if ($('#panel-element-select-files #checkbox-output-file').prop('checked')) {
+					$('#panel-element-select-files #btn-select-files-execute').prop('disabled', false);
+					$('#panel-element-select-files #btn-select-files-execute').text('Decrypt');
+				}
+			}
+
 			if ($('#panel-element-select-directory #checkbox-output-file').prop('checked')) {
 				$('#panel-element-select-directory #group-destination-file').show();
 				$('#panel-element-select-directory #group-destination-directory').hide();
@@ -289,10 +410,29 @@
 				$('#panel-element-select-directory #btn-select-directory-execute').text('Extract');
 			}
 		}
-		checkCheckboxOutputFile();
+		checkCheckbox();
 
+		$('#panel-element-select-files #checkbox-output-file').on('click', function () {
+			$('#panel-element-select-files #checkbox-encryption').prop('checked', false);
+			$('#panel-element-select-files #checkbox-decryption').prop('checked', false);
+			$('#panel-element-select-files #checkbox-is-archive').prop('checked', false);
+			$('#panel-element-select-files #checkbox-offset').prop('checked', false);
+			checkCheckbox();
+		});
+		$('#panel-element-select-files #checkbox-is-archive').on('click', function () {
+			checkCheckbox();
+		});
+		$('#panel-element-select-files #checkbox-offset').on('click', function () {
+			checkCheckbox();
+		});
+		$('#panel-element-select-files #checkbox-encryption').on('click', function () {
+			checkCheckbox();
+		});
+		$('#panel-element-select-files #checkbox-decryption').on('click', function () {
+			checkCheckbox();
+		});
 		$('#panel-element-select-directory #checkbox-output-file').on('click', function () {
-			checkCheckboxOutputFile();
+			checkCheckbox();
 		});
 
 		$('#panel-element-select-directory #btn-select-directory-execute').on('click', function () {
@@ -318,6 +458,10 @@
 			showModal('Console',
 				'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
 			data_process.execute(arg, src, dst, mode);
+		});
+
+		$('#panel-element-select-files #btn-select-files-execute').on('click', function () {
+
 		});
 	</script>
 
