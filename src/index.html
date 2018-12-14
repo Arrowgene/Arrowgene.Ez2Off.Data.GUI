@@ -470,16 +470,17 @@
 				}
 			}
 
-			showModal('Console',
-				'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
-
 			if (src.length > 0) {
 				for (let i = 0; i < src.length; i++) {
 					const path = $(src[i]).text();
 					const pathArray = path.split(/[\/\\]/);
 					const fileName = pathArray[pathArray.length - 1];
+					showModal('Console',
+						'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
 					await data_process.execute(arg, path, (dst ? dst : '.') + '/' + fileName, mode);
 				}
+			} else {
+				await data_process.execute();
 			}
 
 			modalDone();

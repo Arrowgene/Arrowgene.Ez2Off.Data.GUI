@@ -11,6 +11,7 @@ async function execute(arg, src, dst, mode) {
             textarea.append('The parameter is empty.');
             textarea.css('color', 'red');
             resolve();
+            return;
         }
 
         const exec = childProcess.spawn('./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.exe', ['data', arg, src, dst, mode ? mode : ''], {
