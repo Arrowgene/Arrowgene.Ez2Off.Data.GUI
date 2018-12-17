@@ -1,7 +1,4 @@
 const childProcess = require('child_process');
-const _ = require('electron').remote.require('lodash');
-require('hazardous');
-const path = require('path');
 
 async function execute(arg, src, dst, mode) {
     return new Promise(resolve => {
@@ -10,7 +7,7 @@ async function execute(arg, src, dst, mode) {
         if (!_.isString(arg) || _.isEmpty(arg) ||
             !_.isString(src) || _.isEmpty(src) ||
             !_.isString(dst) || _.isEmpty(dst)) {
-            logBuffer.append('The parameter is empty.');
+            logBuffer.append('The parameter is empty.\n');
             logBuffer.error();
             resolve();
             return;
@@ -19,18 +16,19 @@ async function execute(arg, src, dst, mode) {
         let command;
         switch (process.platform) {
             case 'win32':
-                command = './bin/Arrowgene.Ez2Off.Data.CLI/win-x64/Arrowgene.Ez2Off.Data.CLI.exe';
+                command = require('path').join('./bin/Arrowgene.Ez2Off.Data.CLI/win-x64/Arrowgene.Ez2Off.Data.CLI.exe');
                 break;
             case 'darwin':
-                command = './bin/Arrowgene.Ez2Off.Data.CLI/osx-x64/Arrowgene.Ez2Off.Data.CLI';
+                command = require('path').join('./bin/Arrowgene.Ez2Off.Data.CLI/osx-x64/Arrowgene.Ez2Off.Data.CLI');
                 break;
             case 'linux':
-                command = './bin/Arrowgene.Ez2Off.Data.CLI/linux-x64/Arrowgene.Ez2Off.Data.CLI';
+                command = require('path').join('./bin/Arrowgene.Ez2Off.Data.CLI/linux-x64/Arrowgene.Ez2Off.Data.CLI');
                 break;
         }
 
+        require('hazardous');
         const exec = childProcess.spawn(command, ['data', arg, src, dst, mode ? mode : ''], {
-            cwd: path.join(__dirname)
+            cwd: require('path').join(__dirname)
         });
 
         logBuffer.append('Processing, please wait...\n-');

@@ -166,7 +166,7 @@
 
 	<script>
 		window.$ = window.jQuery = require('./js/jquery.min');
-		window._ = require('electron').remote.require('lodash');
+		window._ = require('lodash');
 		window.logBuffer = {
 			buffer: '',
 			maxLength: 2000,
@@ -511,8 +511,9 @@
 						fileName.pop();
 						fileName = fileName.join('.');
 					}
-					// console.log(arg, path, (dst ? dst : '.') + '/' + fileName, mode);
-					await data_process.execute(arg, path, (dst ? dst : '.') + '/' + fileName, mode);
+					// console.log(arg, path, (_.isString(dst) && !_.isEmpty(dst)) ? require('path').join(dst, fileName) : null, mode);
+					await data_process.execute(arg, path, (_.isString(dst) && !_.isEmpty(dst)) ? require('path').join(dst, fileName) :
+						null, mode);
 				}
 			} else {
 				await data_process.execute();
