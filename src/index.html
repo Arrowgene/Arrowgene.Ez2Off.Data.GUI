@@ -172,6 +172,7 @@
 			maxLength: 2000,
 			textArea: null,
 			append(text) {
+				if (!_.isString(text) || _.isEmpty(text)) return;
 				this.buffer += text.replace(/</g, '&lt;').replace(/>/g, '&gt;');;
 				if (this.buffer.length > this.maxLength) {
 					this.buffer = this.buffer.substr(this.buffer.length - this.maxLength);
@@ -451,13 +452,13 @@
 
 			if ($('#panel-element-select-directory #checkbox-output-file').prop('checked')) {
 				dst = $('#panel-element-select-directory #input-destination-file').val();
-				if (_.isString(dst) && !_.isEmpty(dst)) arg = 'pack';
+				arg = 'pack';
 				if ($('#panel-element-select-directory #checkbox-encryption').prop('checked')) {
 					mode = '-e';
 				}
 			} else {
 				dst = $('#panel-element-select-directory #input-destination-directory').val();
-				if (_.isString(dst) && !_.isEmpty(dst)) arg = 'extract-folder';
+				arg = 'extract-folder';
 				if ($('#panel-element-select-directory #checkbox-decryption').prop('checked')) {
 					mode = '-d';
 				}

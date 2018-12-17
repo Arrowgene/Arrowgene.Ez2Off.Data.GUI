@@ -1,5 +1,7 @@
 const childProcess = require('child_process');
 const _ = require('electron').remote.require('lodash');
+require('hazardous');
+const path = require('path');
 
 async function execute(arg, src, dst, mode) {
     return new Promise(resolve => {
@@ -28,7 +30,7 @@ async function execute(arg, src, dst, mode) {
         }
 
         const exec = childProcess.spawn(command, ['data', arg, src, dst, mode ? mode : ''], {
-            cwd: __dirname
+            cwd: path.join(__dirname)
         });
 
         logBuffer.append('Processing, please wait...\n-');

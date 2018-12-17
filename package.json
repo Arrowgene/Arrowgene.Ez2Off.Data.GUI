@@ -29,7 +29,10 @@
         ]
       },
       "electronPackagerConfig": {
-        "packageManager": "npm"
+        "packageManager": "npm",
+        "asar": {
+          "unpackDir": "src/bin"
+        }
       },
       "electronWinstallerConfig": {
         "name": "arrowgene.ez2off.data.gui"
@@ -49,6 +52,7 @@
   "dependencies": {
     "electron-compile": "^6.4.3",
     "electron-squirrel-startup": "^1.0.0",
+    "hazardous": "^0.3.0",
     "lodash": "^4.17.11"
   },
   "devDependencies": {
