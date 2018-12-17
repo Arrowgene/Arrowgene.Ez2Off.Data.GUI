@@ -173,6 +173,9 @@
 			textArea: null,
 			append(text) {
 				if (!_.isString(text) || _.isEmpty(text)) return;
+				if (text.charAt(text.length - 1) != '\n') {
+					text += '\n'
+				}
 				this.buffer += text.replace(/</g, '&lt;').replace(/>/g, '&gt;');;
 				if (this.buffer.length > this.maxLength) {
 					this.buffer = this.buffer.substr(this.buffer.length - this.maxLength);

@@ -7,7 +7,7 @@ async function execute(arg, src, dst, mode) {
         if (!_.isString(arg) || _.isEmpty(arg) ||
             !_.isString(src) || _.isEmpty(src) ||
             !_.isString(dst) || _.isEmpty(dst)) {
-            logBuffer.append('The parameter is empty.\n');
+            logBuffer.append('The parameter is empty.');
             logBuffer.error();
             resolve();
             return;
@@ -44,7 +44,7 @@ async function execute(arg, src, dst, mode) {
         });
 
         exec.on('error', err => {
-            logBuffer.append(err);
+            logBuffer.append(err.message);
             logBuffer.error();
             // goDotnetDL();
         });
