@@ -167,6 +167,31 @@
 	<script>
 		window.$ = window.jQuery = require('./js/jquery.min');
 		window._ = require('electron').remote.require('lodash');
+		window.logBuffer = {
+			buffer: '',
+			maxLength: 2000,
+			textArea: null,
+			append(text) {
+				this.buffer += text.replace(/</g, '&lt;').replace(/>/g, '&gt;');;
+				if (this.buffer.length > this.maxLength) {
+					this.buffer = this.buffer.substr(this.buffer.length - this.maxLength);
+				}
+				if (!this.textArea) return;
+				this.textArea.text(this.buffer);
+				this.scrollBottom();
+			},
+			clear() {
+				this.buffer = '';
+			},
+			error() {
+				if (!this.textArea) return;
+				this.textArea.css('color', 'red');
+			},
+			scrollBottom() {
+				if (!this.textArea) return;
+				this.textArea.scrollTop(this.textArea[0].scrollHeight - this.textArea.height());
+			}
+		}
 	</script>
 	<script src="js/bootstrap.min.js"></script>
 
@@ -222,15 +247,16 @@
 				filters: extensionFilters
 			});
 			if (!_.isEmpty(filesPaths)) {
-				const filesList = $('#panel-element-select-files #input-source-list');
+				const helper = $('#panel-element-select-files #input-source-list #text-list-count').parent();
 				for (let i = 0; i < filesPaths.length; i++) {
 					const path = filesPaths[i];
-					filesList.prepend('<a class="list-group-item">' +
-						'<label id="input-file-path" style="overflow:hidden;text-overflow:ellipsis;direction:rtl;font-weight:normal;max-width:70%">' +
+					helper.before('<a class="list-group-item">' +
+						'<label id="input-file-path" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;font-weight:normal;max-width:70%">' +
 						path +
 						'</label>' +
 						'<button class="btn btn-xs" type="button" id="btn-remove" style="float:right">Remove</button>' +
-						'</a>');
+						'</a>').
+					prev().children('#input-file-path').val(path);
 
 					$('#panel-element-select-files #input-source-list #btn-remove').on('click', function () {
 						$(this).off('click');
@@ -439,6 +465,7 @@
 
 			showModal('Console',
 				'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
+			logBuffer.clear();
 			await data_process.execute(arg, src, dst, mode);
 			modalDone();
 		});
@@ -470,19 +497,25 @@
 				}
 			}
 
+			showModal('Console',
+				'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
+			logBuffer.clear();
 			if (src.length > 0) {
 				for (let i = 0; i < src.length; i++) {
-					const path = $(src[i]).text();
+					const path = $(src[i]).val();
 					const pathArray = path.split(/[\/\\]/);
-					const fileName = pathArray[pathArray.length - 1];
-					showModal('Console',
-						'<textarea class="form-control" rows="11" readonly style="resize:none" id="textarea"></textarea>', true);
+					let fileName = pathArray[pathArray.length - 1];
+					if (arg == 'extract') {
+						fileName = fileName.split('.');
+						fileName.pop();
+						fileName = fileName.join('.');
+					}
+					// console.log(arg, path, (dst ? dst : '.') + '/' + fileName, mode);
 					await data_process.execute(arg, path, (dst ? dst : '.') + '/' + fileName, mode);
 				}
 			} else {
 				await data_process.execute();
 			}
-
 			modalDone();
 		});
 	</script>

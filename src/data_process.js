@@ -3,39 +3,49 @@ const _ = require('electron').remote.require('lodash');
 
 async function execute(arg, src, dst, mode) {
     return new Promise(resolve => {
-        const textarea = $("#modal-notice #textarea");
+        logBuffer.textArea = $("#modal-notice #textarea");
 
         if (!_.isString(arg) || _.isEmpty(arg) ||
             !_.isString(src) || _.isEmpty(src) ||
             !_.isString(dst) || _.isEmpty(dst)) {
-            textarea.append('The parameter is empty.');
-            textarea.css('color', 'red');
+            logBuffer.append('The parameter is empty.');
+            logBuffer.error();
             resolve();
             return;
         }
 
-        const exec = childProcess.spawn('./bin/Arrowgene.Ez2Off.Data.CLI/Arrowgene.Ez2Off.Data.CLI.exe', ['data', arg, src, dst, mode ? mode : ''], {
+        let command;
+        switch (process.platform) {
+            case 'win32':
+                command = './bin/Arrowgene.Ez2Off.Data.CLI/win-x64/Arrowgene.Ez2Off.Data.CLI.exe';
+                break;
+            case 'darwin':
+                command = './bin/Arrowgene.Ez2Off.Data.CLI/osx-x64/Arrowgene.Ez2Off.Data.CLI';
+                break;
+            case 'linux':
+                command = './bin/Arrowgene.Ez2Off.Data.CLI/linux-x64/Arrowgene.Ez2Off.Data.CLI';
+                break;
+        }
+
+        const exec = childProcess.spawn(command, ['data', arg, src, dst, mode ? mode : ''], {
             cwd: __dirname
         });
 
-        textarea.append('Processing, please wait...\n-');
+        logBuffer.append('Processing, please wait...\n-');
 
         exec.stdout.on('data', chunk => {
-            textarea.append(optimizeString(chunk.toString('utf8')));
-            scrollBottom(textarea);
+            logBuffer.append(chunk.toString('utf8'));
         });
 
         exec.stderr.on('data', chunk => {
-            textarea.append(optimizeString(chunk.toString('utf8')));
-            textarea.css('color', 'red');
-            scrollBottom(textarea);
+            logBuffer.append(chunk.toString('utf8'));
+            logBuffer.error();
             // goDotnetDL();
         });
 
         exec.on('error', err => {
-            textarea.append(err);
-            textarea.css('color', 'red');
-            scrollBottom(textarea);
+            logBuffer.append(err);
+            logBuffer.error();
             // goDotnetDL();
         });
 
@@ -43,14 +53,6 @@ async function execute(arg, src, dst, mode) {
             resolve();
         });
     });
-}
-
-function optimizeString(text) {
-    return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function scrollBottom(textarea) {
-    textarea.scrollTop(textarea[0].scrollHeight - textarea.height());
 }
 
 function goDotnetDL() {
